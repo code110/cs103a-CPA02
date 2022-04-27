@@ -1,19 +1,22 @@
 {
-  "name": "cs103a-cpa02",
-  "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
+  "name": "personalapp",
+  "version": "0.0.0",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node app.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/code110/cs103a-CPA02.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/code110/cs103a-CPA02/issues"
-  },
-  "homepage": "https://github.com/code110/cs103a-CPA02#readme"
+  "dependencies": {
+    "axios": "^0.26.1",
+    "bcrypt": "^5.0.1",
+    "connect-flash": "^0.1.1",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "ejs": "~2.6.1",
+    "express": "~4.16.1",
+    "express-ejs-layouts": "^2.5.1",
+    "express-session": "^1.16.2",
+    "http-errors": "~1.6.3",
+    "mongoose": "^5.9.21",
+    "nodemon": "^2.0.15"
+  }
 }
