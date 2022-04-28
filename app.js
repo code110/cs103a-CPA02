@@ -14,17 +14,21 @@ const session = require("express-session"); // to handle sessions using cookies
 const debug = require("debug")("personalapp:server"); 
 const layouts = require("express-ejs-layouts");
 const axios = require("axios")
-
+const yahooFinance = require('yahoo-finance2').default;
 // *********************************************************** //
 //  Loading models
 // *********************************************************** //
-// const ToDoItem = require("./models/ToDoItem")
-// const Course = require('./models/Course')
-
+const Stock = require("./models/Stock")
+const Curstock = require("./models/Curstock")
 // *********************************************************** //
 //  Loading JSON datasets
 // *********************************************************** //
-// const courses = require('./public/data/courses20-21.json')
+
+const getData= async(req,res,next) => {
+  const query = res.locals.curStockId;
+  const queryOptions = { period1: '2021-05-08', /* ... */ };
+  res.locals.curStockData = await yahooFinance.historical(query, queryOptions);
+}
 
 
 // *********************************************************** //
@@ -119,11 +123,75 @@ app.get('/stocklist',
     async (req,res,next) =>{
         try{
             let userId = res.locals.user._id;
+            let data = await Curstock.find({userId:userId});            
+            res.locals.data = data;  
+            res.locals.mydata = JSON.stringify(data[0].stockData);      
+           
+
+            let items = await Stock.find({userId:userId});
+            res.locals.items = items;
             res.render("stocklist");
         } catch(e){
             next(e);
         }
     }
+)
+
+app.post('/stocklist/add',
+  isLoggedIn,
+  async (req,res,next) => {
+    try{
+      const {stockId} = req.body; 
+      const userId = res.locals.user._id; // get the user's id
+      let data = {stockId, userId} // create the data object
+      let item = new Stock(data) // create the database object (and test the types are correct)
+      await item.save() // save the todo item in the database
+      res.redirect('/stocklist')  // go back to the todo page
+    } catch (e){
+      next(e);
+    }
+  }
+  )
+
+app.get("/stocklist/delete/:itemId",
+    isLoggedIn,
+    async (req,res,next) => {
+      try{
+        const itemId=req.params.itemId; // get the id of the item to delete
+        await Stock.deleteOne({_id:itemId}) // remove that item from the database
+        res.redirect('/stocklist') // go back to the todo page
+      } catch (e){
+        next(e);
+      }
+    }
+  )
+
+  app.get("/stocklist/:curStockId",
+  isLoggedIn,
+  async (req,res,next) => {
+    try{
+      const userId = res.locals.user._id;
+      const curStockId = req.params.curStockId;
+
+      const query = curStockId;
+      const queryOptions = { period1: '2021-05-08', /* ... */ };
+      const curStockData = await yahooFinance.historical(query, queryOptions);
+
+      let mydata = [];
+      for( let i=0; i < curStockData.length; i++){
+        mydata.push([curStockData[i].date,curStockData[i].open, curStockData[i].high,curStockData[i].low,curStockData[i].close]);
+      } 
+
+      await Curstock.updateOne(
+        { userId: userId},
+        { $set: { userId: userId, stockId: curStockId, stockData: mydata}},
+        { upsert: true })
+
+      res.redirect('/stocklist') // go back to the todo page
+    } catch (e){
+      next(e);
+    }
+  }
 )
 
 
@@ -169,6 +237,7 @@ app.set("port", port);
 // and now we startup the server listening on that port
 const http = require("http");
 const { networkInterfaces } = require("os");
+const { cursorTo } = require("readline");
 const server = http.createServer(app);
 
 server.listen(port);
