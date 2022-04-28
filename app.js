@@ -123,11 +123,16 @@ app.get('/stocklist',
     async (req,res,next) =>{
         try{
             let userId = res.locals.user._id;
-            let data = await Curstock.find({userId:userId});            
+            
+            let data = await Curstock.find({userId:userId});
             res.locals.data = data;  
-            res.locals.mydata = JSON.stringify(data[0].stockData);      
-           
-
+            if(data.length !== 0){
+            res.locals.mydata = JSON.stringify(data[0].stockData); 
+            res.locals.name = data[0].stockId;                   
+            }else{
+            res.locals.mydata = [];
+            res.locals.name = "";
+            }
             let items = await Stock.find({userId:userId});
             res.locals.items = items;
             res.render("stocklist");
@@ -143,7 +148,8 @@ app.post('/stocklist/add',
     try{
       const {stockId} = req.body; 
       const userId = res.locals.user._id; // get the user's id
-      let data = {stockId, userId} // create the data object
+      const price = "";
+      let data = {stockId, userId, price} // create the data object
       let item = new Stock(data) // create the database object (and test the types are correct)
       await item.save() // save the todo item in the database
       res.redirect('/stocklist')  // go back to the todo page
@@ -176,6 +182,13 @@ app.get("/stocklist/delete/:itemId",
       const query = curStockId;
       const queryOptions = { period1: '2021-05-08', /* ... */ };
       const curStockData = await yahooFinance.historical(query, queryOptions);
+      var curPrice = curStockData[curStockData.length - 1].close;
+      curPrice = curPrice.toFixed(2);
+
+      await Stock.updateOne(
+        { stockId: curStockId},
+        { $set: { price: curPrice}},
+        { upsert: true })
 
       let mydata = [];
       for( let i=0; i < curStockData.length; i++){
@@ -194,20 +207,6 @@ app.get("/stocklist/delete/:itemId",
   }
 )
 
-
-// this route load in the courses into the database
-// or updates the courses if it is a new database
-app.get('/upsertDB',
-  async (req,res,next) => {
-    //await Course.deleteMany({})
-    for (course of courses){
-      const {coursenum,section,term}=course;
-      await Course.findOneAndUpdate({subject,coursenum,section,term},course,{upsert:true})
-    }
-    const num = await Course.find({}).count();
-    res.send("data uploaded: "+num)
-  }
-)
 
 
 // here we catch 404 errors and forward to error handler

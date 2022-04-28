@@ -7,8 +7,8 @@
         function (data) {
         // create data table on loaded data
         var dataTable = anychart.data.table();
-        dataTable.addData(data);
-
+        dataTable.addData(<%- mydata%>);
+      
         // map loaded data for the candlestick series
         var mapping = dataTable.mapAs({
           open: 1,
@@ -27,7 +27,7 @@
         plot.yGrid(true).xGrid(true).yMinorGrid(true).xMinorGrid(true);
 
         var series = plot.candlestick(mapping)
-          .name('Tesla');
+          .name('');
         series.legendItem().iconType('rising-falling');
 
         // create scroller series with mapped data
@@ -48,8 +48,6 @@
         // init range selector
         rangeSelector.render(chart);
         
-        // sets the title of the chart
-        chart.title("<%- data[0].stockId%>");
         
         // set container id for the chart
         chart.container('container');
@@ -59,9 +57,8 @@
       }
       );
     });
-
-    var tableData = <%- mydata%>;
-    console.log(tableData);
+  
+    
     </script>
   </div>
 
@@ -71,7 +68,7 @@
     <% for (item of items){%>
       <tr class="table-row"data-href="/stocklist/:curStockId">
         <td><a href="/stocklist/<%= item.stockId%>"><%= item.stockId%></a></td>
-        <td> <a href="/stocklist/delete/<%= item._id%>"> X</a></td>
+        <td><%= item.price%> <a href="/stocklist/delete/<%= item._id%>">X</a></td>
       </tr>
     <% }%>
     </table>
@@ -83,5 +80,5 @@
      
   
   </div>
- <p><%= data[0].stockId%></p>
+
 </div>
