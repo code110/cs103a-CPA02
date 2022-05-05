@@ -3,3 +3,4 @@ node_modules
 *~
 startup.sh
 startup.ps1
+.env
